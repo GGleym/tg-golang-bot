@@ -5,7 +5,7 @@ import (
 )
 
 type Bot struct {
-	api *tgbotapi.BotAPI
+	API *tgbotapi.BotAPI
 }
 
 func InitBot(token string) (*Bot, error) {
@@ -15,5 +15,13 @@ func InitBot(token string) (*Bot, error) {
 		return nil, err
 	}
 
-	return &Bot{api}, nil
+	return &Bot{API: api}, nil
+}
+
+func UpdateBot(timeout int) tgbotapi.UpdateConfig {
+	updateConfig := tgbotapi.NewUpdate(0)
+
+	updateConfig.Timeout = timeout
+	
+	return updateConfig
 }
