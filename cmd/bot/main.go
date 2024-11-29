@@ -18,7 +18,9 @@ func main() {
 
 	initiatedBot.API.Debug = true
 
-	updateConfig := bot.UpdateBot(30)
+	log.Printf("Authorized on account %v", initiatedBot.API.Self.UserName)
+
+	updateConfig := bot.UpdateBot(60)
 	updates := initiatedBot.API.GetUpdatesChan(updateConfig)
 	
 	for update := range updates {
@@ -26,13 +28,29 @@ func main() {
 			continue
 		}
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+	 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
-		msg.ReplyToMessageID = update.Message.MessageID
+		if !update.Message.IsCommand() {
+			msg.Text = "Введите команду"
 
-		
-		if _, err := initiatedBot.API.Send(msg); err != nil {
-            panic(err)
+			initiatedBot.API.Send(msg)
+
+			continue
+		}
+
+        switch update.Message.Command() {
+        case "help":
+            msg.Text = "У меня есть команды /sayhi и /status."
+        case "sayhi":
+            msg.Text = "Привет :)"
+        case "status":
+            msg.Text = "У меня все хорошо."
+        default:
+            msg.Text = "Такой команды у меня нет :("
         }
+
+		if _, err := initiatedBot.API.Send(msg); err != nil {
+			log.Panic(err)
+		}
 	}
 }
