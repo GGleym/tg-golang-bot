@@ -2,7 +2,9 @@ package main
 
 import (
 	"github/GGleym/telegram-todo-app-golang/internal/bot"
+	"github/GGleym/telegram-todo-app-golang/internal/commands"
 	"github/GGleym/telegram-todo-app-golang/internal/config"
+	"github/GGleym/telegram-todo-app-golang/internal/db"
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -16,8 +18,8 @@ func main() {
 		log.Printf("Could not initiate the bot: %v", err)
 	}
 
+	dbInstance := db.InitDB()
 	initiatedBot.API.Debug = true
-
 	log.Printf("Authorized on account %v", initiatedBot.API.Self.UserName)
 
 	updateConfig := bot.UpdateBot(60)
@@ -32,25 +34,17 @@ func main() {
 
 		if !update.Message.IsCommand() {
 			msg.Text = "Введите команду"
-
 			initiatedBot.API.Send(msg)
-
 			continue
 		}
 
-        switch update.Message.Command() {
-        case "help":
-            msg.Text = "У меня есть команды /sayhi и /status."
-        case "sayhi":
-            msg.Text = "Привет :)"
-        case "status":
-            msg.Text = "У меня все хорошо."
-        default:
-            msg.Text = "Такой команды у меня нет :("
-        }
+		commands.HandleCommands(update, &msg, dbInstance)
+		sendMessage(initiatedBot.API, msg)
+	}
+}
 
-		if _, err := initiatedBot.API.Send(msg); err != nil {
-			log.Panic(err)
-		}
+func sendMessage(bot *tgbotapi.BotAPI, msg tgbotapi.MessageConfig) {
+	if _, err := bot.Send(msg); err != nil {
+		log.Panic(err)
 	}
 }

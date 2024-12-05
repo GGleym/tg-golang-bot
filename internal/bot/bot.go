@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"errors"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -9,6 +11,10 @@ type Bot struct {
 }
 
 func InitBot(token string) (*Bot, error) {
+	if token == "" {
+		return nil, errors.New("вы не передали токен")
+	}
+
 	api, err := tgbotapi.NewBotAPI(token)
 
 	if err != nil {
