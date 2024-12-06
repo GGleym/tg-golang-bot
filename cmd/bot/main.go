@@ -7,6 +7,8 @@ import (
 	"github/GGleym/telegram-todo-app-golang/internal/db"
 	"log"
 
+	_ "github/GGleym/telegram-todo-app-golang/internal/db/controller"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
