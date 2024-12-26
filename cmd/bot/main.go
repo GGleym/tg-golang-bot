@@ -1,55 +1,62 @@
 package main
 
 import (
-	"fmt"
 	"github/GGleym/telegram-todo-app-golang/internal/bot"
 	"github/GGleym/telegram-todo-app-golang/internal/commands"
 	"github/GGleym/telegram-todo-app-golang/internal/config"
-	"github/GGleym/telegram-todo-app-golang/internal/db"
 	"github/GGleym/telegram-todo-app-golang/internal/router"
 	"log"
 	"net/http"
-
-	_ "github/GGleym/telegram-todo-app-golang/internal/db/controller"
+	"os"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func main() {
-	config := config.InitConfig()
-	initiatedBot, err := bot.InitBot(config.Token)
-	r := router.Router()
+	config.LoadEnv()
+	token := os.Getenv("TOKEN")
+	if token == "" {
+		log.Fatal("TOKEN variable was not set")
+	}
 
+	telegramBot, err := bot.InitBot(token)
 	if err != nil {
 		log.Printf("Could not initiate the bot: %v", err)
 	}
+	telegramBot.API.Debug = true
+	log.Printf("Authorized on account %v", telegramBot.API.Self.UserName)
 
-	dbInstance := db.InitDB()
-	initiatedBot.API.Debug = true
-	log.Printf("Authorized on account %v", initiatedBot.API.Self.UserName)
+	router := router.Router()
 
+	go func() {
+		log.Println("HTTP server listening on port 4000")
+		if err := http.ListenAndServe(":4000", router); err != nil {
+			log.Fatalf("Failed to start a server on port 4000: %v", err)
+		}
+	}()
+
+	handleTelegramUpdates(telegramBot)
+}
+
+func handleTelegramUpdates(telegramBot *bot.Bot) {
 	updateConfig := bot.UpdateBot(60)
-	updates := initiatedBot.API.GetUpdatesChan(updateConfig)
+	updates := telegramBot.API.GetUpdatesChan(updateConfig)
 
-	http.ListenAndServe(":4000", r)
-
-	fmt.Println("Listening at port 4000")
-	
 	for update := range updates {
 		if update.Message == nil {
 			continue
 		}
 
-	 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
 		if !update.Message.IsCommand() {
 			msg.Text = "Введите команду"
-			initiatedBot.API.Send(msg)
+			sendMessage(telegramBot.API, msg)
 			continue
 		}
 
-		commands.HandleCommands(update, &msg, dbInstance)
-		sendMessage(initiatedBot.API, msg)
+		commands.HandleCommands(update, &msg)
+		sendMessage(telegramBot.API, msg)
 	}
 }
 
