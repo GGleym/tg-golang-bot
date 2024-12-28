@@ -69,7 +69,7 @@ func (r *TaskRepository) DeleteAllTasks(ctx context.Context) (int64, error) {
 
 func (r *TaskRepository) GetAllTasks(ctx context.Context) ([]bson.M, error) {
 	cur, err := r.collection.Find(ctx, bson.D{})
-	
+
 	if err != nil {
 		return nil, err
 	}

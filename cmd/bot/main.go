@@ -2,11 +2,8 @@ package main
 
 import (
 	"github/GGleym/telegram-todo-app-golang/internal/bot"
-	"github/GGleym/telegram-todo-app-golang/internal/commands"
 	"github/GGleym/telegram-todo-app-golang/internal/config"
-	"github/GGleym/telegram-todo-app-golang/internal/router"
 	"log"
-	"net/http"
 	"os"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -25,15 +22,6 @@ func main() {
 	}
 	telegramBot.API.Debug = true
 	log.Printf("Authorized on account %v", telegramBot.API.Self.UserName)
-
-	router := router.Router()
-
-	go func() {
-		log.Println("HTTP server listening on port 4000")
-		if err := http.ListenAndServe(":4000", router); err != nil {
-			log.Fatalf("Failed to start a server on port 4000: %v", err)
-		}
-	}()
 
 	handleTelegramUpdates(telegramBot)
 }
@@ -55,7 +43,7 @@ func handleTelegramUpdates(telegramBot *bot.Bot) {
 			continue
 		}
 
-		commands.HandleCommands(update, &msg)
+		bot.HandleCommands(update, &msg)
 		sendMessage(telegramBot.API, msg)
 	}
 }
