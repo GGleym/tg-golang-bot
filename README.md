@@ -141,5 +141,3 @@ For issues or feature requests, feel free to open an issue or contact me via:
 -   Telegram: @GGleym
 
 ----------
-
-Let’s build something amazing together! 🚀
